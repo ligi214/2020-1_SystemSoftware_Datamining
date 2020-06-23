@@ -20,16 +20,19 @@ def gen_accuracy(ans, groundtruths):
     return acc
 
 
-def avg_distance(ans, gold_standard, groundtruths, ancestors, descendants):
+def avg_distance(ans, groundtruths, ancestors, descendants):
     dist = 0
+    temp_dist = 0
+    step = 0
     for obj in ans.keys():
+        step += 1
         inferred_ans = ans[obj]
         if inferred_ans in groundtruths[obj]:
             # inferred ans == true or ancestor of goldstandard
-            dist += groundtruths[obj].index(inferred_ans)
+            temp_dist = groundtruths[obj].index(inferred_ans)
         elif groundtruths[obj][0] in ancestors[inferred_ans]:
             # inferred ans == descendant of goldstandard
-            dist += ancestors[inferred_ans].index(groundtruths[obj][0])
+            temp_dist = ancestors[inferred_ans].index(groundtruths[obj][0])
         else:
             # absolutely wrong answer
             d = 0
@@ -38,6 +41,8 @@ def avg_distance(ans, gold_standard, groundtruths, ancestors, descendants):
                 v = ancestors[v][0]
                 d += 1
             d += (ancestors[inferred_ans].index(v) + 1)
-            dist += d
+            temp_dist = d
+        dist += temp_dist
+
     acc = dist / len(ans.keys())
     return acc

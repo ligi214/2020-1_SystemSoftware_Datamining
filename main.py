@@ -15,15 +15,23 @@ src_info, obj_info = records_processing(records)
 ancestors, descendants = hierarchy_processing(hierarchy)
 
 # Get gold standard from groundtruths
-gold_standard = dict()
+gold_standards = dict()
 for obj in obj_info.keys():
     candidate = obj_info[obj]['Vo']
     groundtruth = groundtruths[obj]
-    gold_standard[obj] = None
+    gold_standards[obj] = None
     for truth in groundtruth:
         if truth in candidate:
-            gold_standard[obj] = truth
+            gold_standards[obj] = truth
             break
+
+# Modify groundtruths
+for obj in groundtruths.keys():
+    try:
+        idx = groundtruths[obj].index(gold_standards[obj])
+    except ValueError:
+        idx = 0
+    groundtruths[obj] = groundtruths[obj][idx:]
 
 # Initialize parameters
 phi, psi, mu = dict(), dict(), dict()
@@ -55,15 +63,12 @@ print(phi)
 
 # print answer
 print(ans)
-goldstandards = dict()
-for obj in groundtruths:
-    goldstandards[obj] = groundtruths[obj][0]
-print(goldstandards)
+print(groundtruths)
 
 # Accuracy evaluation
-acc = accuracy(ans, gold_standard)
+acc = accuracy(ans, gold_standards)
 gen_acc = gen_accuracy(ans, groundtruths)
-avg_dist = avg_distance(ans, gold_standard, groundtruths, ancestors, descendants)
+avg_dist = avg_distance(ans, groundtruths, ancestors, descendants)
 print(acc, gen_acc, avg_dist)
 
 # Baselines: VOTE
@@ -84,4 +89,4 @@ for obj in vote_obj.keys():
 
 print('========== VOTE ==========')
 print(vote_ans)
-print(accuracy(vote_ans, gold_standard))
+print(accuracy(vote_ans, gold_standards))
