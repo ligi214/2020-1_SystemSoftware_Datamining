@@ -41,7 +41,7 @@ def records_processing(records):
         src_info[record['src']][record['obj']] = record['value']
 
         if not record['obj'] in obj_info.keys():
-            obj_info[record['obj']] = {'Vo': [], 'So': []}
+            obj_info[record['obj']] = {'Vo': [], 'So': [], 'Wo': []}
         if not record['value'] in obj_info[record['obj']]['Vo']:
             obj_info[record['obj']]['Vo'].append(record['value'])
         obj_info[record['obj']]['So'].append(record['src'])
