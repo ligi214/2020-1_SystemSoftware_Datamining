@@ -1,6 +1,8 @@
 import heapq
 import random
 
+random.seed(0)
+
 
 def get_prob_vos(vos, vo_star, phi, candidate, ancestors):
     # phi : 3-dim vector
@@ -335,7 +337,6 @@ def task_assignment(U_EAI, psi, k, mu, f_os, f_ow, obj_info, src_info, ancestor,
             if len(h_EAI[worker]) <= k:
                 break
             _, o = heapq.heappop(h_EAI[worker])
-    print(h_EAI)
 
     tasks = dict()
     for worker in workers:

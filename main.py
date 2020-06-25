@@ -8,8 +8,6 @@ alpha = (3, 3, 2)
 beta = (2, 2, 2)
 gamma = 2
 iteration = 50
-num_workers = 10
-k = 5  # the number of questions to be asked in each round
 
 # Data processing
 records, groundtruths, hierarchy = get_heritage()
@@ -39,8 +37,6 @@ for obj in groundtruths.keys():
 phi, psi, mu = dict(), dict(), dict()
 for src in src_info.keys():
     phi[src] = np.random.dirichlet(alpha=alpha)
-for i in range(num_workers):
-    psi[i] = np.random.dirichlet(alpha=beta)
 for obj in obj_info.keys():
     mu[obj] = dict()
     dist = np.random.dirichlet(alpha=[gamma]*len(obj_info[obj]['Vo']))
@@ -94,4 +90,4 @@ for obj in vote_obj.keys():
 
 print('========== VOTE ==========')
 print(vote_ans)
-print(accuracy(vote_ans, gold_standards))
+print(accuracy(vote_ans, gold_standards), gen_accuracy(vote_ans, groundtruths), avg_distance(vote_ans, groundtruths, ancestors, descendants))

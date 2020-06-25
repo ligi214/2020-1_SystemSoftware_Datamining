@@ -94,24 +94,3 @@ avg_dist = avg_distance(ans, groundtruths, ancestors, descendants)
 print(acc, gen_acc, avg_dist)
 
 
-exit(0)
-
-# Baselines: VOTE
-vote_obj = dict()
-for record in records:
-    if record['obj'] not in vote_obj.keys():
-        vote_obj[record['obj']] = dict()
-    if record['value'] not in vote_obj[record['obj']].keys():
-        vote_obj[record['obj']][record['value']] = 0
-    vote_obj[record['obj']][record['value']] += 1
-vote_ans = dict()
-for obj in vote_obj.keys():
-    max_val = None
-    for val in vote_obj[obj].keys():
-        if max_val == None or (max_val in vote_obj[obj].keys() and vote_obj[obj][max_val] < vote_obj[obj][val]):
-            max_val = val
-    vote_ans[obj] = max_val
-
-print('========== VOTE ==========')
-print(vote_ans)
-print(accuracy(vote_ans, gold_standards))
