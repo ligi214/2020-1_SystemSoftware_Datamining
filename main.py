@@ -2,6 +2,7 @@ from dataloader import *
 from utils import *
 from metrics import *
 import numpy as np
+import time
 
 # hyperparameter settings
 alpha = (3, 3, 2)
@@ -48,6 +49,7 @@ for obj in obj_info.keys():
 f_os, f_ow, g_os, g_ow = dict(), dict(), dict(), dict()
 
 # EM algorithm
+since = time.time()
 for i in range(iteration):
     # E Step
     f_os = get_f_os(phi, mu, obj_info, src_info, ancestors)
@@ -55,8 +57,11 @@ for i in range(iteration):
     # M Step
     mu = get_mu(f_os, f_ow, gamma, obj_info)
     phi = get_phi(g_os, alpha, src_info)
+
 # inference
 ans = inference(obj_info, mu)
+duration = int(time.time() - since)
+
 print(f_os)
 print(g_os)
 print(mu)
@@ -71,6 +76,10 @@ acc = accuracy(ans, gold_standards)
 gen_acc = gen_accuracy(ans, groundtruths)
 avg_dist = avg_distance(ans, groundtruths, ancestors, descendants)
 print(acc, gen_acc, avg_dist)
+
+# Time display
+print('Time: {:d}m {:d}s'.format(duration // 60, duration % 60))
+
 
 # Baselines: VOTE
 vote_obj = dict()

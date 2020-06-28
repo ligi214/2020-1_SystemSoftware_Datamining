@@ -1,5 +1,5 @@
 from dataloader import *
-from utils import *
+from utils_opt import *
 from metrics import *
 import numpy as np
 import time
@@ -41,6 +41,8 @@ for obj in groundtruths.keys():
 
 # Initialize parameters
 phi, psi, mu = dict(), dict(), dict()
+mu_denominator, mu_numerator = dict(), dict()  # for optimization
+sum_vos, sum_vow = dict(), dict()  # for optimization
 for src in src_info.keys():
     phi[src] = np.random.dirichlet(alpha=alpha)
 for i in range(num_workers):
@@ -59,21 +61,23 @@ f_os, f_ow, g_os, g_ow = dict(), dict(), dict(), dict()
 # EM algorithm
 since = time.time()
 for i in range(1, iteration+1):
+    mu_denominator, mu_numerator = dict(), dict()  # for optimization
+    sum_vos, sum_vow = dict(), dict()
     if i % 5 == 0:
         print('Step {}'.format(i))
     # E Step
-    f_os = get_f_os(phi, mu, obj_info, src_info, ancestors)
-    f_ow = get_f_ow(psi, mu, obj_info, worker_info, src_info, ancestors)
-    g_os = get_g_os(phi, mu, obj_info, src_info, ancestors)
-    g_ow = get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestors)
+    f_os = get_f_os(phi, mu, obj_info, src_info, ancestors, sum_vos)
+    f_ow = get_f_ow(psi, mu, obj_info, worker_info, src_info, ancestors, sum_vow)
+    g_os = get_g_os(phi, mu, obj_info, src_info, ancestors, sum_vos)
+    g_ow = get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestors, sum_vow)
     # M Step
-    mu = get_mu(f_os, f_ow, gamma, obj_info)
+    mu = get_mu(f_os, f_ow, gamma, obj_info, mu_denominator, mu_numerator)
     phi = get_phi(g_os, alpha, src_info)
     if i > 0:
         psi = get_psi(g_ow, beta, worker_info)
     # Task assignment at every round
-    U_EAI = get_U_EAI(mu, obj_info, gamma)
-    tasks = task_assignment(U_EAI, psi, k, mu, f_os, f_ow, obj_info, src_info, ancestors, gamma)
+    U_EAI = get_U_EAI(mu, obj_info, mu_denominator)
+    tasks = task_assignment(U_EAI, psi, k, mu, obj_info, src_info, ancestors, mu_denominator, mu_numerator)
     worker_answer(tasks, gold_standards, groundtruths, obj_info, worker_info, worker_correct_prob)
 
 # inference

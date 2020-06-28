@@ -8,13 +8,16 @@ gen_accuracy = df.values[:, 2]
 distance = df.values[:, 3]
 
 plt.figure()
-plt.scatter(iteration, accuracy)
+plt.plot(iteration, accuracy, '-o')
+plt.savefig('./../results/accuracy.png')
 
 plt.figure()
-plt.scatter(iteration, gen_accuracy)
+plt.plot(iteration, gen_accuracy, '-o')
+plt.savefig('./../results/gen_accuracy.png')
 
 plt.figure()
-plt.scatter(iteration, distance)
+plt.plot(iteration, distance, '-o')
+plt.savefig('./../results/distance.png')
 plt.show()
 
 df = pd.read_csv('./../results/method.csv')
