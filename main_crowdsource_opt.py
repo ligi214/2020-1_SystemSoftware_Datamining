@@ -31,6 +31,20 @@ for obj in obj_info.keys():
             gold_standards[obj] = truth
             break
 
+# Save flag_h for each object
+for obj in obj_info.keys():
+    candidate = obj_info[obj]['Vo']
+    obj_info[obj]['flag h'] = False
+    for v in candidate:
+        for w in candidate:
+            if v in ancestors[w]:
+                obj_info[obj]['flag h'] = True
+
+# Save Go(vo*) for each object and value
+#for obj in obj_info.keys():
+#    for vo_star in obj_info[obj]['Vo']:
+
+
 # Modify groundtruths
 for obj in groundtruths.keys():
     try:
@@ -78,7 +92,7 @@ for i in range(1, iteration+1):
     # Task assignment at every round
     U_EAI = get_U_EAI(mu, obj_info, mu_denominator)
     tasks = task_assignment(U_EAI, psi, k, mu, obj_info, src_info, ancestors, mu_denominator, mu_numerator)
-    worker_answer(tasks, gold_standards, groundtruths, obj_info, worker_info, worker_correct_prob)
+    worker_answer(tasks, gold_standards, obj_info, worker_info, worker_correct_prob)
 
 # inference
 ans = inference(obj_info, mu)

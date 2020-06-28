@@ -4,7 +4,7 @@ import random
 random.seed(0)
 
 
-def get_prob_vos(vos, vo_star, phi, candidate, ancestors):
+def get_prob_vos(vos, vo_star, phi, candidate, ancestors, flag_h):
     # phi : 3-dim vector
     # candidate : vo
     go_vo_star = []
@@ -12,12 +12,6 @@ def get_prob_vos(vos, vo_star, phi, candidate, ancestors):
     for v in candidate:
         if v in ancestor:
             go_vo_star.append(v)
-
-    flag_h = False
-    for v in candidate:
-        for w in candidate:
-            if w in ancestors[v]:
-                flag_h = True
 
     if flag_h:
         if vos == vo_star:
@@ -33,18 +27,12 @@ def get_prob_vos(vos, vo_star, phi, candidate, ancestors):
             return phi[2] / (len(candidate) - 1)
 
 
-def get_prob_vow(vow, vo_star, psi, candidate, obj, so, src_info, ancestors):
+def get_prob_vow(vow, vo_star, psi, candidate, obj, so, src_info, ancestors, flag_h):
     go_vo_star = []
     ancestor = ancestors[vo_star]
     for v in candidate:
         if v in ancestor:
             go_vo_star.append(v)
-
-    flag_h = False
-    for v in candidate:
-        for w in candidate:
-            if w in ancestors[v]:
-                flag_h = True
 
     if flag_h:
         if vow == vo_star:
@@ -93,11 +81,11 @@ def get_f_os(phi, mu, obj_info, src_info, ancestor, sum_vos):
             # evaluate denominator
             sum_vos[obj][src] = 0
             for v in obj_info[obj]['Vo']:
-                sum_vos[obj][src] += get_prob_vos(vos, v, phi[src], obj_info[obj]['Vo'], ancestor) * mu[obj][v]
+                sum_vos[obj][src] += get_prob_vos(vos, v, phi[src], obj_info[obj]['Vo'], ancestor, obj_info[obj]['flag h']) * mu[obj][v]
 
             # final calculation
             for v in obj_info[obj]['Vo']:
-                f_os[obj][src][v] = get_prob_vos(vos, v, phi[src], obj_info[obj]['Vo'], ancestor) * mu[obj][v] / sum_vos[obj][src]
+                f_os[obj][src][v] = get_prob_vos(vos, v, phi[src], obj_info[obj]['Vo'], ancestor, obj_info[obj]['flag h']) * mu[obj][v] / sum_vos[obj][src]
     return f_os
 
 
@@ -114,10 +102,10 @@ def get_f_ow(psi, mu, obj_info, worker_info, src_info, ancestor, sum_vow):
             sum_vow[obj][worker] = 0
             for v in obj_info[obj]['Vo']:
                 sum_vow[obj][worker] += get_prob_vow(vow, v, psi[worker], obj_info[obj]['Vo'], obj,
-                                                     obj_info[obj]['So'], src_info, ancestor) * mu[obj][v]
+                                                     obj_info[obj]['So'], src_info, ancestor, obj_info[obj]['flag h']) * mu[obj][v]
             for v in obj_info[obj]['Vo']:
                 f_ow[obj][worker][v] = get_prob_vow(vow, v, psi[worker], obj_info[obj]['Vo'], obj,
-                                                    obj_info[obj]['So'], src_info, ancestor) * mu[obj][v] / sum_vow[obj][worker]
+                                                    obj_info[obj]['So'], src_info, ancestor, obj_info[obj]['flag h']) * mu[obj][v] / sum_vow[obj][worker]
     return f_ow
 
 
@@ -125,6 +113,7 @@ def get_g_os(phi, mu, obj_info, src_info, ancestor, sum_vos):
     g_os = dict()
     for obj in obj_info.keys():
         g_os[obj] = dict()
+        flag_h = obj_info[obj]['flag h']
         for src in obj_info[obj]['So']:
             g_os[obj][src] = [0, 0, 0]
             vos = src_info[src][obj]
@@ -135,12 +124,6 @@ def get_g_os(phi, mu, obj_info, src_info, ancestor, sum_vos):
                 if vos in ancestor[v]:
                     do_vos.append(v)
 
-            flag_h = False
-            for v in candidate:
-                for w in candidate:
-                    if v in ancestor[w]:
-                        flag_h = True
-
             # 1
             g_os[obj][src][0] = phi[src][0] * mu[obj][vos] / sum_vos[obj][src]
 
@@ -148,7 +131,7 @@ def get_g_os(phi, mu, obj_info, src_info, ancestor, sum_vos):
             if flag_h:
                 numerator = 0
                 for v in do_vos:
-                    numerator += (get_prob_vos(vos, v, phi[src], candidate, ancestor) * mu[obj][v])
+                    numerator += (get_prob_vos(vos, v, phi[src], candidate, ancestor, obj_info[obj]['flag h']) * mu[obj][v])
                 g_os[obj][src][1] = numerator / sum_vos[obj][src]
             else:
                 g_os[obj][src][1] = phi[src][1] * mu[obj][vos] / sum_vos[obj][src]
@@ -157,7 +140,7 @@ def get_g_os(phi, mu, obj_info, src_info, ancestor, sum_vos):
             numerator = 0
             for v in candidate:
                 if v != vos and v not in do_vos:
-                    numerator += (get_prob_vos(vos, v, phi[src], candidate, ancestor) * mu[obj][v])
+                    numerator += (get_prob_vos(vos, v, phi[src], candidate, ancestor, obj_info[obj]['flag h']) * mu[obj][v])
             g_os[obj][src][2] = numerator / sum_vos[obj][src]
     return g_os
 
@@ -166,6 +149,7 @@ def get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestor, sum_vow):
     g_ow = dict()
     for obj in obj_info.keys():
         g_ow[obj] = dict()
+        flag_h = obj_info[obj]['flag h']
         for worker in obj_info[obj]['Wo']:
             g_ow[obj][worker] = [0, 0, 0]
             vow = worker_info[worker][obj]
@@ -176,12 +160,6 @@ def get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestor, sum_vow):
                 if vow in ancestor[v]:
                     do_vow.append(v)
 
-            flag_h = False
-            for v in candidate:
-                for w in candidate:
-                    if v in ancestor[w]:
-                        flag_h = True
-
             # 1
             g_ow[obj][worker][0] = psi[worker][0] * mu[obj][vow] / sum_vow[obj][worker]
 
@@ -189,7 +167,7 @@ def get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestor, sum_vow):
             if flag_h:
                 numerator = 0
                 for v in do_vow:
-                    numerator += (get_prob_vow(vow, v, psi[worker], candidate, obj, obj_info[obj]['So'], src_info, ancestor) * mu[obj][v])
+                    numerator += (get_prob_vow(vow, v, psi[worker], candidate, obj, obj_info[obj]['So'], src_info, ancestor, obj_info[obj]['flag h']) * mu[obj][v])
                 g_ow[obj][worker][1] = numerator / sum_vow[obj][worker]
             else:
                 g_ow[obj][worker][1] = psi[worker][1] * mu[obj][vow] / sum_vow[obj][worker]
@@ -198,7 +176,7 @@ def get_g_ow(psi, mu, obj_info, worker_info, src_info, ancestor, sum_vow):
             numerator = 0
             for v in candidate:
                 if v != vow and v not in do_vow:
-                    numerator += (get_prob_vow(vow, v, psi[worker], candidate, obj, obj_info[obj]['So'], src_info, ancestor) * mu[obj][v])
+                    numerator += (get_prob_vow(vow, v, psi[worker], candidate, obj, obj_info[obj]['So'], src_info, ancestor, obj_info[obj]['flag h']) * mu[obj][v])
             g_ow[obj][worker][2] = numerator / sum_vow[obj][worker]
 
     return g_ow
@@ -295,7 +273,6 @@ def task_assignment(U_EAI, psi, k, mu, obj_info, src_info, ancestor, mu_denomina
         try:
             _, o = heapq.heappop(h_UB)
         except IndexError:
-            print('index error')
             break
 
         if len(h_EAI[num_workers - 1]) == k and len(h_EAI) > 0 and all(h_EAI[w][0][0] > U_EAI[o] for w in sorted_workers):
@@ -324,9 +301,9 @@ def get_eai_w_o(o, mu, psi, obj_info, src_info, ancestor, mu_denominator, mu_num
         prob = 0
         max_mu = 0
         for v in obj_info[o]['Vo']:
-            prob += get_prob_vow(v_, v, psi, obj_info[o]['Vo'], o, obj_info[o]['So'], src_info, ancestor) * mu[o][v]
+            prob += get_prob_vow(v_, v, psi, obj_info[o]['Vo'], o, obj_info[o]['So'], src_info, ancestor, obj_info[o]['flag h']) * mu[o][v]
             cond_mu = get_mu_o_v_cond(o, v, v_, mu, psi, obj_info[o]['Vo'], obj_info[o]['So'],
-                                      src_info, ancestor, mu_denominator, mu_numerator)
+                                      src_info, ancestor, mu_denominator, mu_numerator, obj_info[o]['flag h'])
             if max_mu < cond_mu:
                 max_mu = cond_mu
         # get mu o v vow conditional and get the max of it and multiply the two of them
@@ -341,16 +318,16 @@ def get_eai_w_o(o, mu, psi, obj_info, src_info, ancestor, mu_denominator, mu_num
     return eai
 
 
-def get_mu_o_v_cond(o, v, v_, mu, psi, candidate, so, src_info, ancestor, mu_denominator, mu_numerator):
-    numerator = get_prob_vow(v_, v, psi, candidate, o, so, src_info, ancestor) * mu[o][v]
+def get_mu_o_v_cond(o, v, v_, mu, psi, candidate, so, src_info, ancestor, mu_denominator, mu_numerator, flag_h):
+    numerator = get_prob_vow(v_, v, psi, candidate, o, so, src_info, ancestor, flag_h) * mu[o][v]
     denominator = 0
     for v__ in candidate:
-        denominator += (get_prob_vow(v_, v__, psi, candidate, o, so, src_info, ancestor) * mu[o][v__])
+        denominator += (get_prob_vow(v_, v__, psi, candidate, o, so, src_info, ancestor, flag_h) * mu[o][v__])
     f = numerator / denominator
     return (mu_numerator[o][v] + f) / (mu_denominator[o] + 1)
 
 
-def worker_answer(tasks, gold_standards, groundtruths, obj_info, worker_info, worker_correct_prob):
+def worker_answer(tasks, gold_standards, obj_info, worker_info, worker_correct_prob):
     workers = worker_info.keys()
     for worker in workers:
         for obj in tasks[worker]:
