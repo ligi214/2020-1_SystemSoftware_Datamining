@@ -4,6 +4,8 @@ from metrics import *
 import numpy as np
 import time
 
+since = time.time()
+
 # hyperparameter settings
 alpha = (3, 3, 2)
 beta = (2, 2, 2)
@@ -57,7 +59,6 @@ worker_correct_prob = [np.random.uniform(pi-0.05, pi+0.05) for _ in range(num_wo
 f_os, f_ow, g_os, g_ow = dict(), dict(), dict(), dict()
 
 # EM algorithm
-since = time.time()
 for i in range(1, iteration+1):
     if i % 5 == 0:
         print('Step {}'.format(i))

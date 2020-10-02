@@ -4,6 +4,8 @@ from metrics import *
 import numpy as np
 import time
 
+since = time.time()
+
 # hyperparameter settings
 alpha = (3, 3, 2)
 beta = (2, 2, 2)
@@ -41,9 +43,17 @@ for obj in obj_info.keys():
                 obj_info[obj]['flag h'] = True
 
 # Save Go(vo*) for each object and value
-#for obj in obj_info.keys():
-#    for vo_star in obj_info[obj]['Vo']:
-
+for obj in obj_info.keys():
+    obj_info[obj]['Go(vo*)'] = dict()
+    obj_info[obj]['Do(vos)'] = dict()
+    for vo_star in obj_info[obj]['Vo']:
+        obj_info[obj]['Go(vo*)'][vo_star] = []
+        obj_info[obj]['Do(vos)'][vo_star] = []
+        for v in obj_info[obj]['Vo']:
+            if v in ancestors[vo_star]:
+                obj_info[obj]['Go(vo*)'][vo_star].append(v)
+            if vo_star in ancestors[v]:
+                obj_info[obj]['Do(vos)'][vo_star].append(v)
 
 # Modify groundtruths
 for obj in groundtruths.keys():
@@ -73,7 +83,6 @@ worker_correct_prob = [np.random.uniform(pi-0.05, pi+0.05) for _ in range(num_wo
 f_os, f_ow, g_os, g_ow = dict(), dict(), dict(), dict()
 
 # EM algorithm
-since = time.time()
 for i in range(1, iteration+1):
     mu_denominator, mu_numerator = dict(), dict()  # for optimization
     sum_vos, sum_vow = dict(), dict()
@@ -92,6 +101,7 @@ for i in range(1, iteration+1):
     # Task assignment at every round
     U_EAI = get_U_EAI(mu, obj_info, mu_denominator)
     tasks = task_assignment(U_EAI, psi, k, mu, obj_info, src_info, ancestors, mu_denominator, mu_numerator)
+    #tasks = rand_task_assognment(num_workers, list(obj_info.keys()), k)
     worker_answer(tasks, gold_standards, obj_info, worker_info, worker_correct_prob)
 
 # inference
@@ -102,6 +112,8 @@ for obj in obj_info.keys():
     if len(obj_info[obj]['Wo']) > 2:
         break
 print('obj:\t', obj)
+print('s ans:\t', ['{}: {}'.format(src, src_info[src][obj]) for src in obj_info[obj]['So']])
+print('w ans:\t', ['Worker{:d}: {}'.format(w, worker_info[w][obj]) for w in obj_info[obj]['Wo']])
 print('f_os:\t', f_os[obj])
 print('f_ow:\t', f_ow[obj])
 print('g_os:\t', g_os[obj])
